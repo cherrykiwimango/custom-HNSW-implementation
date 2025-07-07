@@ -59,6 +59,8 @@ def convert_to_vector(user: UserModel):
   for language in user.language:
     lang_vector = np.array(get_vector("language_vectors", language, default_lang_vector), dtype=np.float32) * W_LANGUAGE
     language_vector += lang_vector
+
+  #check if travel pref is enabled and if not add a default item
   
   normalized_age = np.array([max(0.0, min(1.0, (user.age - 18) / (70 - 18)))], dtype=np.float32) 
   final_vector = np.concatenate([normalized_age, gender_vector, employment_vector, location_vector, language_vector])
