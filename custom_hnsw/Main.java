@@ -27,6 +27,7 @@ public class Main {
 
     obj.printGraph();
 
+    System.out.println();
     List<Vector> bestK = obj.fetchBestKNodes(v2, 3);
     for (Vector node : bestK) {
       System.out.println("Node: (" + node.x + "," + node.y + ")");
@@ -37,7 +38,7 @@ public class Main {
 class HNSW {
   // class variables I would need
   Map<Integer, Map<Integer, Set<Integer>>> graph; // main graph
-  Map<Integer, Vector> vectors; // vectors just stored in an array
+  Map<Integer, Vector> vectors; // vectors just stored in a map
   int maxLevel = 0, entryPoint = 0, lastIndex = 0;
 
   HNSW() {
@@ -73,6 +74,7 @@ class HNSW {
       maxLevel = currentLevel;
       entryPoint = inputIndex;
     }
+    // TODO: Add this to arg list later
     int num = 4;
     PriorityQueue<NodeDist> neighbourList = returnKNeighbours(entryPoint, inputNode, inputIndex, maxLevel, num);
     // make the connections
@@ -185,7 +187,7 @@ class HNSW {
     /*
      * steps
      * 1. add to open list
-     * while open list is not empty
+     * 2. while open list is not empty
      * -> extract best item from open
      * -> if(best << worst) break;
      * -> get children of best and add to open list
@@ -194,7 +196,7 @@ class HNSW {
      */
     openList.add(new NodeDist(bestEntryPoint, entryPointDist));
     while (!openList.isEmpty()) {
-      NodeDist bestNode = openList.poll();
+      NodeDist bestNode = openList.poll(); // extracting the best node
       NodeDist worstNode = closedList.peek();
 
       // add all items to the openList
