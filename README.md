@@ -5,6 +5,8 @@
 An implementation of Hierarchical Navigable Small Graphs with insert and fetch operations. Handles 2d vectors of the form of a custom class.
 
 <img width="730" height="701" alt="hnswgraph" src="https://github.com/user-attachments/assets/d55c56db-a4b3-451c-aa55-69eea327ec4a" />
+<img width="350" height="336" alt="hnswgraph (1)" src="https://github.com/user-attachments/assets/4b5d8f1b-b7b4-4346-9ba1-84ef62830a4c" />
+
 
 
 ## Demo Video
