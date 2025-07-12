@@ -80,6 +80,14 @@ public class SimpleVisualizer extends JPanel {
     }
 
     public static void main(String[] args) {
+
+        /*
+         * The below section is the visualizer for the HNSW graph
+         * You can comment out the below section and write your own code implementing
+         * the class
+         * Example: HNSW obj = new HNSW(); obj.insert(//Vector)
+         */
+
         JFrame frame = new JFrame("HNSW Visualizer");
         SimpleVisualizer panel = new SimpleVisualizer();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -89,6 +97,7 @@ public class SimpleVisualizer extends JPanel {
 
         HNSW obj = new HNSW();
 
+        // example vectors added for the visualizer
         Vector[] vectors = {
                 new Vector(1, 2), new Vector(2, 3), new Vector(3, 1), new Vector(4, 5), new Vector(5, 2),
                 new Vector(6, 6), new Vector(7, 4), new Vector(8, 3), new Vector(9, 7), new Vector(2, 8),
