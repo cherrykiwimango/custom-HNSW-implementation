@@ -1,47 +1,14 @@
+package hnsw;
+
 import java.util.*;
 
-public class Main {
-  public static void main(String[] args) {
-    HNSW obj = new HNSW();
-    Vector v1 = new Vector(1, 2);
-    Vector v2 = new Vector(2, 3);
-    Vector v3 = new Vector(3, 1);
-    Vector v4 = new Vector(6, 5);
-    Vector v5 = new Vector(7, 8);
-    Vector v6 = new Vector(5, 2);
-    Vector v7 = new Vector(9, 9);
-    Vector v8 = new Vector(2, 1);
-    Vector v9 = new Vector(8, 3);
-    Vector v10 = new Vector(4, 4);
-
-    obj.insertNode(v1);
-    obj.insertNode(v2);
-    obj.insertNode(v3);
-    obj.insertNode(v4);
-    obj.insertNode(v5);
-    obj.insertNode(v6);
-    obj.insertNode(v7);
-    obj.insertNode(v8);
-    obj.insertNode(v9);
-    obj.insertNode(v10);
-
-    obj.printGraph();
-
-    System.out.println();
-    List<Vector> bestK = obj.fetchBestKNodes(v2, 3);
-    for (Vector node : bestK) {
-      System.out.println("Node: (" + node.x + "," + node.y + ")");
-    }
-  }
-}
-
-class HNSW {
+public class HNSW {
   // class variables I would need
-  Map<Integer, Map<Integer, Set<Integer>>> graph; // main graph
+  public Map<Integer, Map<Integer, Set<Integer>>> graph; // main graph
   Map<Integer, Vector> vectors; // vectors just stored in a map
   int maxLevel = 0, entryPoint = 0, lastIndex = 0;
 
-  HNSW() {
+  public HNSW() {
     graph = new HashMap<>();
     vectors = new HashMap<>();
   }
@@ -49,13 +16,13 @@ class HNSW {
   /* MAIN INSERT METHOD */
 
   public void insertNode(Vector inputNode) {
-    // think about the steps
     /*
-     * step 1: generate a random number
-     * Add number to that many levels
-     * If currentLevel > maxLevel
-     * do greedy search from entry point to find the best entry point
-     * do a priority queue search to get the best n neighbours
+     * STEPS
+     * -> generate a random number
+     * -> Add number to that many levels
+     * -> If currentLevel > maxLevel
+     * -> do greedy search from entry point to find the best entry point
+     * -> do a priority queue search to get the best n neighbours
      */
     inputNode.index = lastIndex; // storing the index so that it's easy to fetch later
     vectors.put(lastIndex, inputNode);
@@ -73,9 +40,12 @@ class HNSW {
     if (currentLevel > maxLevel) {
       maxLevel = currentLevel;
       entryPoint = inputIndex;
+      return;
     }
+
     // TODO: Add this to arg list later
-    int num = 4;
+    int num = 2;
+
     PriorityQueue<NodeDist> neighbourList = returnKNeighbours(entryPoint, inputNode, inputIndex, maxLevel, num);
     // make the connections
     for (int i = 0; i <= currentLevel; i++) {
@@ -98,11 +68,44 @@ class HNSW {
   public List<Vector> fetchBestKNodes(Vector inputVector, int K) {
     int inputIndex = inputVector.index;
     List<Vector> output = new ArrayList<>();
-    PriorityQueue<NodeDist> neighbourList = returnKNeighbours(entryPoint, inputVector, inputIndex, maxLevel, K);
+    PriorityQueue<NodeDist> neighbourList = returnKNeighbours(entryPoint,
+        inputVector, inputIndex, maxLevel, K);
     for (NodeDist node : neighbourList) {
       int index = node.index;
       output.add(vectors.get(index));
     }
+    return output;
+  }
+
+  public int[][] returnPoints() {
+    int[][] output = new int[vectors.size()][3];
+    for (int i = 0; i < vectors.size(); i++) {
+      Vector vec = vectors.get(i);
+      output[i][0] = vec.index;
+      output[i][1] = (int) vec.x;
+      output[i][2] = (int) vec.y;
+    }
+    return output;
+  }
+
+  public int[][] returnConnections() {
+    List<int[]> connections = new ArrayList<>();
+    Set<Integer> keys = graph.get(0).keySet();
+
+    for (int key : keys) {
+      for (int neighbor : graph.get(0).get(key)) {
+        // To avoid duplicate edges like (2,3) and (3,2), keep only one direction
+        connections.add(new int[] { key, neighbor });
+
+      }
+    }
+
+    // Convert List<int[]> to int[][]
+    int[][] output = new int[connections.size()][2];
+    for (int i = 0; i < connections.size(); i++) {
+      output[i] = connections.get(i);
+    }
+
     return output;
   }
 
@@ -114,6 +117,31 @@ class HNSW {
         System.out.println("Node: " + key + "->" + graph.get(i).get(key));
       }
       System.out.println();
+    }
+  }
+
+  public void printGraphRelations() {
+    System.out.println();
+    System.out.println("Graph at iteration");
+    Set<Integer> keys = graph.get(0).keySet();
+    for (int key : keys) {
+      for (int value : graph.get(0).get(key)) {
+        System.out.println(key + " " + value);
+      }
+    }
+  }
+
+  public void printGraphingRelations() {
+    System.out.println();
+    System.out.println("Graph at iteration");
+    Set<Integer> keys = graph.get(0).keySet();
+    for (int key : keys) {
+      for (int i = 0; i < graph.get(0).get(key).size(); i++) {
+        List<Integer> valueList = new ArrayList<>(graph.get(0).get(key));
+        double x1 = vectors.get(key).x, y1 = vectors.get(key).y;
+        double x2 = vectors.get(valueList.get(i)).x, y2 = vectors.get(valueList.get(i)).y;
+        System.out.printf("Vector((%.1f, %.1f), (%.1f, %.1f))\n", x1, y1, x2, y2);
+      }
     }
   }
 
@@ -207,32 +235,34 @@ class HNSW {
           openList.add(new NodeDist(neigh, neighDist));
         }
       }
-      if (closedList.size() < K)
+      // Avoid adding the input node itself
+      if (bestNode.index == inputIndex)
+        continue;
+
+      // Avoid duplicate entries in closedList
+      boolean alreadyInClosed = false;
+      for (NodeDist n : closedList) {
+        if (n.index == bestNode.index) {
+          alreadyInClosed = true;
+          break;
+        }
+      }
+      if (alreadyInClosed)
+        continue;
+
+      if (closedList.size() < K) {
         closedList.add(bestNode);
-      else if (bestNode.distance < worstNode.distance) {
+      } else if (bestNode.distance < worstNode.distance) {
         closedList.poll();
         closedList.add(bestNode);
       }
+
     }
     return closedList;
   }
 }
 
 // creating a 2d vector class
-class Vector {
-  double x, y;
-  int index;
-
-  Vector(double x, double y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  // method finds the euclidean distance
-  double vectorDistance(Vector vec) {
-    return Math.hypot(this.x - vec.x, this.y - vec.y); // O(1)
-  }
-}
 
 class NodeDist {
   int index;
